@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import unittest
 from datetime import datetime
 
@@ -52,22 +51,23 @@ class TestTaskManager(unittest.TestCase):
     def test_add_duplicate_task(self) -> None:
         """
         Test adding a duplicate task with the same title.
-        Verify that duplicates are not allowed and the function raises an exception.
+        Verify that duplicates are not allowed, it is case insensitive and the function returns false.
         """
 
         self._task_manager.add_task("Test Task", "Description", datetime(2027, 1, 1))
+        result = self._task_manager.add_task("test task", "New Description", datetime(2028, 2, 2))
 
-        with self.assertRaises(sqlite3.IntegrityError):
-            self._task_manager.add_task("Test Task", "New Description", datetime(2027, 1, 1))
+        self.assertFalse(result)
 
     def test_add_invalid_due_date(self) -> None:
         """
         Test adding a task with an invalid due date format.
-        Verify that the function handles invalid input and the function raises an exception.
+        Verify that the function handles invalid input and the function returns false.
         """
 
-        with self.assertRaises(sqlite3.IntegrityError):
-            self._task_manager.add_task("Test Task", "Description", datetime(2024, 1, 1))
+        result = self._task_manager.add_task("Test Task", "Description", datetime(2024, 1, 1))
+
+        self.assertFalse(result)
 
     def test_delete_task(self) -> None:
         """
