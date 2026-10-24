@@ -1,110 +1,109 @@
-from src.task import Task
-from src.file_handler import save_tasks
+from __future__ import annotations
+
+import sqlite3
 from datetime import datetime
 
+from src.task import Task
 
-def add_task(tasks, title, description, due_date):
+
+class TaskManager:
     """
-    Add a new task to the task list.
-
-    Args:
-        tasks (list): The list of existing Task objects.
-        title (str): The title of the new task.
-        description (str): A brief description of the task.
-        due_date (str): The due date of the task in 'DD-MM-YYYY' format.
-
-    Returns:
-        bool: True if the task is added successfully, False otherwise.
-
-    Raises:
-        ValueError: If the due date is not in the correct format.
-
-    Side Effects:
-        - Saves the updated task list to a file using `save_tasks`.
+    Essentially an sqlite3 db wrapper/service used to create, delete and manage daily tasks.
     """
-    # Prevent duplicate tasks
-    if any(task.title == title for task in tasks):
-        print("Error: A task with this title already exists.")
-        return False
 
-    # Validate due date format
-    try:
-        datetime.strptime(due_date, "%d-%m-%Y")
-    except ValueError:
-        print("Error: Invalid date format. Use DD-MM-YYYY.")
-        return False
+    def __init__(self, db_name: str) -> None:
+        self._db = sqlite3.connect(db_name)
+        self._db.row_factory = sqlite3.Row
+        self._cursor = self._db.cursor()
+        self._db.autocommit = True
+        with self._db:
+            self._cursor.execute(
+                "CREATE TABLE IF NOT EXISTS tasks ("
+                "title TEXT PRIMARY KEY COLLATE NOCASE,"
+                "description TEXT NOT NULL,"
+                "due_date TEXT NOT NULL DEFAULT CURRENT_DATE,"
+                "status TEXT NOT NULL DEFAULT 'pending',"
+                "CHECK (due_date >= CURRENT_DATE)"
+                ")"
+            )
 
-    tasks.append(Task(title, description, due_date))
-    save_tasks(tasks)
-    return True
+    # hoping you might be able to answer a question:
+    # __del__ should be called when the future object ref count is <1
+    # so why when i call my classTearDown method does it raise an exception
+    # due to the connection still being open and in use, even when explicitly calling the gc
+    # in the end i just ended up closing it manually after each test but still curious about
+    # this and the way gc is handled
+    def __del__(self) -> None:
+        self._db.close()
 
+    def add_task(self, title: str, description: str, due_date: datetime) -> bool:
+        """
+        Add a new task to the tasks table.
 
-def delete_task(tasks, title):
-    """
-    Delete a task from the task list based on its title.
+        Args:
+            title (str): The title of the new task, must be unique.
+            description (str): A brief description of the task.
+            due_date (datetime): The due date of the task.
 
-    Args:
-        tasks (list): The list of existing Task objects.
-        title (str): The title of the task to be deleted.
+        Returns:
+            bool: True if the task is added successfully, False otherwise.
+        """
 
-    Returns:
-        bool: True if the task was found and deleted, False otherwise.
+        try:
+            with self._db:
+                result = self._cursor.execute(
+                    "INSERT INTO tasks (title, description, due_date) VALUES (?, ?, ?)", (title, description, due_date.strftime("%Y-%m-%d"))
+                )
 
-    Side Effects:
-        - Saves the updated task list to a file using `save_tasks`.
-    """
-    for task in tasks:
-        if task.title == title:
-            tasks.remove(task)
-            save_tasks(tasks)
-            return True
-    return False
+                return result.rowcount > 0
 
+        except sqlite3.IntegrityError:
+            return False
 
-def list_tasks(tasks, status=None):
-    """
-    Display tasks in the task list, optionally filtered by status.
+    def delete_task(self, title: str) -> bool:
+        """
+        Delete a task from the tasks table based on its title.
 
-    Args:
-        tasks (list): The list of existing Task objects.
-        status (str, optional): The status to filter tasks
-        by (e.g., "pending" or "completed").
+        Args:
+            title (str): The title of the task to be deleted.
 
-    Returns:
-        None
+        Returns:
+            bool: True if the task was found and deleted, False otherwise.
+        """
 
-    Side Effects:
-        - Prints the list of tasks to the console.
-    """
-    if not status:
-        # If status is not set
-        filtered = tasks
-    else:
-        # Filter tasks based on their status
-        filtered = []
-        for task in tasks:
-            if task.status == status:
-                filtered.append(task)
+        try:
+            with self._db:
+                result = self._cursor.execute(f"DELETE FROM tasks WHERE title = '{title}'")
 
-    if not filtered:
-        print("No tasks found.")
-        return
-    for task in filtered:
-        print(
-            f"{task.title} | {task.description} | "
-            f"Due: {task.due_date} | Status: {task.status}"
-        )
+                return result.rowcount > 0
 
+        except sqlite3.IntegrityError:
+            return False
 
-def filter_tasks_by_status(tasks, status):
-    """
-    Filter tasks by their status.
+    def tasks(self, status: str | None = None) -> list[Task]:
+        """
+        Display tasks in the tasks table, optionally filtered by status.
 
-    Args:
-        tasks (list): The list of existing Task objects.
-        status (str): The status to filter tasks by (e.g., "pending" or "completed").
+        Args:
+            status (str, optional): The status to filter tasks (eg. 'pending').
 
-    Returns:
-        list: A list of Task objects that match the specified status.
-    """
-    return [task for task in tasks if task.status == status]
+        Returns:
+            list[Task]: Returns the rows as a list.
+        """
+
+        try:
+            # i hate this so much but i hate python's ternary statements with string interpolation even more
+            query = "SELECT * FROM tasks"
+
+            if status is not None:
+                query += f" WHERE status = '{status}'"
+
+            with self._db:
+                result = self._cursor.execute(query)
+
+            rows = result.fetchall()
+
+            return [Task(row["title"], row["description"], row["due_date"], row["status"]) for row in rows]
+
+        except sqlite3.IntegrityError:
+            return []
