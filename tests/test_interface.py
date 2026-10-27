@@ -19,8 +19,8 @@ class TestInterface(unittest.TestCase):
 
         # not the cleanest approach but works for testing
         task_manager = TaskManager(self._TEST_DB_NAME)
-        task_manager._cursor.execute("DROP TABLE IF EXISTS tasks")
-        task_manager._db.close()
+        task_manager._cursor.execute("DROP TABLE IF EXISTS tasks") # type: ignore
+        task_manager._db.close() # type: ignore
 
     @classmethod
     def tearDownClass(cls) -> None:
