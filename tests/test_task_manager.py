@@ -10,7 +10,7 @@ class TestTaskManager(unittest.TestCase):
     Unit tests for Task Manager functionalities including creating, adding and deleting from the tasks database.
     """
 
-    _TEST_TABLE_NAME = "test_tasks.db"
+    _TEST_DB_NAME = "test_tasks.db"
 
     def setUp(self) -> None:
         """
@@ -18,7 +18,7 @@ class TestTaskManager(unittest.TestCase):
         a new database file with the specified name.
         """
 
-        self._task_manager = TaskManager(self._TEST_TABLE_NAME)
+        self._task_manager = TaskManager(self._TEST_DB_NAME)
 
     def tearDown(self) -> None:
         """
@@ -26,8 +26,8 @@ class TestTaskManager(unittest.TestCase):
         """
 
         # not the cleanest approach but works for testing
-        self._task_manager._cursor.execute("DROP TABLE IF EXISTS tasks")
-        self._task_manager._db.close()
+        self._task_manager._cursor.execute("DROP TABLE IF EXISTS tasks") # type: ignore
+        self._task_manager._db.close() # type: ignore
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -35,7 +35,7 @@ class TestTaskManager(unittest.TestCase):
         Clean up any test-created database files.
         """
 
-        os.remove(cls._TEST_TABLE_NAME)
+        os.remove(cls._TEST_DB_NAME)
 
     def test_add_task(self) -> None:
         """
