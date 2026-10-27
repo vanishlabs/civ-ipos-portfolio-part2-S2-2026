@@ -133,20 +133,26 @@ class Cli(Command):
             (3) List current tasks.
         
             Run --help to see the list of commands.
+
+            CTRL+C to quit.
             """
 
         # not a massive fan of how ive done this tbh
         if self.subcommand is None:
             while True:
-                _clear()
-                option = prompt(boxed(options_prompt, width=100, align="center", color="cyan") + "\nOption")
-                _clear()
+                try:
+                    _clear()
+                    option = prompt(boxed(options_prompt, width=100, align="center", color="cyan") + "\nOption")
+                    _clear()
 
-                command = options.get(option)
+                    command = options.get(option)
 
-                if command is None:
-                    print("Invalid option.")
-                else:
-                    await command.parse(["--db_name", self.db_name]).astart()
+                    if command is None:
+                        print("Invalid option.")
+                    else:
+                        await command.parse(["--db_name", self.db_name]).astart()
 
-                input("Press enter to continue...")
+                    input("Press enter to continue...")
+
+                except (EOFError, KeyboardInterrupt):
+                    sys.exit(0)
