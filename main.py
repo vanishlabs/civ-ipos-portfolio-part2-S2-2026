@@ -5,7 +5,7 @@ from src.task_manager import TaskManager
 _task_manager = TaskManager("tasks.db")
 
 
-def main():
+def main():  # noqa: C901
     while True:
         print("\nTask Manager CLI")
         print("1. Add Task")
@@ -31,7 +31,7 @@ def main():
             tasks = _task_manager.tasks()
 
             for task in tasks:
-                print(f"### Title: {task.title} | Due: {task.due_date} | Status: {task.status} ###")
+                print(f"### Title: {task.title} | Due: {task.due_date} | Status: {task.status} ###")  # noqa: E501 B950
                 print(task.description + '\n')
         elif choice == "4":
             print("Exiting Task Manager.")
