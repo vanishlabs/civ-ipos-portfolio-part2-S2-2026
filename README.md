@@ -2,6 +2,15 @@
 
 ---
 
+## **New**
+
+### **Running The App**
+1. Install required dependencies with `pip install -r requirements.txt`
+2. Run the application with `python main.py --help` to see the available options, or alternatively run `python main.py` to be prompted with a interactive cli.
+
+### **New Dependencies**
+- `clypi 1.9.1`
+
 ## **Overview**
 
 This activity requires you to:
