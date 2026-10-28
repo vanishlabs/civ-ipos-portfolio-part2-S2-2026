@@ -1,9 +1,11 @@
-from src.task_manager import add_task, delete_task, list_tasks
-from src.file_handler import load_tasks
+from datetime import datetime
+
+from src.task_manager import TaskManager
+
+_task_manager = TaskManager("tasks.db")
 
 
-def main():
-    tasks = load_tasks()
+def main():  # noqa: C901
     while True:
         print("\nTask Manager CLI")
         print("1. Add Task")
@@ -16,15 +18,21 @@ def main():
             title = input("Title: ")
             description = input("Description: ")
             due_date = input("Due Date (DD-MM-YYYY): ")
-            add_task(tasks, title, description, due_date)
+            _task_manager.add_task(
+                title, description, datetime.strptime(due_date, "%d-%m-%Y")
+            )
         elif choice == "2":
             title = input("Title of the task to delete: ")
-            if delete_task(tasks, title):
+            if _task_manager.delete_task(title):
                 print("Task deleted successfully.")
             else:
                 print("Task not found.")
         elif choice == "3":
-            list_tasks(tasks)
+            tasks = _task_manager.tasks()
+
+            for task in tasks:
+                print(f"### Title: {task.title} | Due: {task.due_date} | Status: {task.status} ###")  # noqa: E501 B950
+                print(task.description + '\n')
         elif choice == "4":
             print("Exiting Task Manager.")
             break
