@@ -13,10 +13,10 @@ class TaskManager:
     """
 
     def __init__(self, db_name: str) -> None:
-        self._db = sqlite3.connect(db_name)
+        self._db = sqlite3.connect(db_name, isolation_level=None)
         self._db.row_factory = sqlite3.Row
         self._cursor = self._db.cursor()
-        self._db.autocommit = True
+
         with self._db:
             self._cursor.execute(
                 "CREATE TABLE IF NOT EXISTS tasks ("
