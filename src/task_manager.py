@@ -8,7 +8,8 @@ from src.task import Task
 
 class TaskManager:
     """
-    Essentially an sqlite3 db wrapper/service used to create, delete and manage daily tasks.
+    Essentially an sqlite3 db wrapper/service used to
+    create, delete and manage daily tasks.
     """
 
     def __init__(self, db_name: str) -> None:
@@ -29,10 +30,11 @@ class TaskManager:
 
     # hoping you might be able to answer a question:
     # __del__ should be called when the future object ref count is <1
-    # so why when i call my classTearDown method does it raise an exception
-    # due to the connection still being open and in use, even when explicitly calling the gc
-    # in the end i just ended up closing it manually after each test but still curious about
-    # this and the way gc is handled
+    # so why when i call my classTearDown method does
+    # it raise an exception due to the connection still being open and in use
+    # even when explicitly calling the gc.
+    # in the end i just ended up closing it manually after each test
+    # but still curious about this and the way gc is handled
     def __del__(self) -> None:
         self._db.close()
 
@@ -52,7 +54,8 @@ class TaskManager:
         try:
             with self._db:
                 result = self._cursor.execute(
-                    "INSERT INTO tasks (title, description, due_date) VALUES (?, ?, ?)", (title, description, due_date.strftime("%Y-%m-%d"))
+                    "INSERT INTO tasks (title, description, due_date) VALUES (?, ?, ?)",
+                    (title, description, due_date.strftime("%Y-%m-%d")),
                 )
 
                 return result.rowcount > 0
@@ -73,7 +76,9 @@ class TaskManager:
 
         try:
             with self._db:
-                result = self._cursor.execute(f"DELETE FROM tasks WHERE title = '{title}'")
+                result = self._cursor.execute(
+                    f"DELETE FROM tasks WHERE title = '{title}'"
+                )
 
                 return result.rowcount > 0
 
@@ -92,7 +97,8 @@ class TaskManager:
         """
 
         try:
-            # i hate this so much but i hate python's ternary statements with string interpolation even more
+            # i hate this so much but i hate python's ternary statements
+            # with string interpolation even more
             query = "SELECT * FROM tasks"
 
             if status is not None:
@@ -103,7 +109,10 @@ class TaskManager:
 
             rows = result.fetchall()
 
-            return [Task(row["title"], row["description"], row["due_date"], row["status"]) for row in rows]
+            return [
+                Task(row["title"], row["description"], row["due_date"], row["status"])
+                for row in rows
+            ]
 
         except sqlite3.IntegrityError:
             return []

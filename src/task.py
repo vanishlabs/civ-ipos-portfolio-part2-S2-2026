@@ -12,7 +12,9 @@ class Task:
         status (str): The current status of the task, defaults to 'pending'.
     """
 
-    def __init__(self, title: str, description: str, due_date: str, status: str = "pending") -> None:
+    def __init__(
+        self, title: str, description: str, due_date: str, status: str = "pending"
+    ) -> None:
         """
         Initialise a Task object with title, description, due date, and status.
 

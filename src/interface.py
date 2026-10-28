@@ -5,7 +5,20 @@ import sys
 from datetime import datetime
 from typing import Any
 
-from clypi import ClypiConfig, ClypiFormatter, Command, Positional, Styler, Theme, arg, boxed, configure, prompt, separator, stack
+from clypi import (
+    ClypiConfig,
+    ClypiFormatter,
+    Command,
+    Positional,
+    Styler,
+    Theme,
+    arg,
+    boxed,
+    configure,
+    prompt,
+    separator,
+    stack,
+)
 from typing_extensions import override
 
 from src.task_manager import TaskManager
@@ -52,12 +65,23 @@ configure(
 class Add(Command):
     """Prompts a user for task details and creates adds its to the task manager."""
 
-    db_name: str = arg(help="The name of the tasks database to use.", default="tasks.db")
+    db_name: str = arg(
+        help="The name of the tasks database to use.", default="tasks.db"
+    )
 
-    title: Positional[str] = arg(help="The title of the task.", prompt="What is the title of the task you would like to add?")
-    description: Positional[str] = arg(help="The description of the task.", prompt="What is the description?")
+    title: Positional[str] = arg(
+        help="The title of the task.",
+        prompt="What is the title of the task you would like to add?",
+    )
+
+    description: Positional[str] = arg(
+        help="The description of the task.", prompt="What is the description?"
+    )
+
     due_date: Positional[datetime] = arg(
-        help="The tasks due date.", prompt="What is the due date? (format: dd-mm-yyyy)", parser=_parse_date
+        help="The tasks due date.",
+        prompt="What is the due date? (format: dd-mm-yyyy)",
+        parser=_parse_date,
     )
 
     @override
@@ -76,9 +100,14 @@ class Add(Command):
 class Delete(Command):
     """Prompts a user for a task to be removed from the task manager."""
 
-    db_name: str = arg(help="The name of the tasks database to use.", default="tasks.db")
+    db_name: str = arg(
+        help="The name of the tasks database to use.", default="tasks.db"
+    )
 
-    title: Positional[str] = arg(help="The title of the task to delete.", prompt="What is the name of the task you would like to delete?")
+    title: Positional[str] = arg(
+        help="The title of the task to delete.",
+        prompt="What is the name of the task you would like to delete?",
+    )
 
     @override
     async def run(self) -> None:
@@ -89,15 +118,21 @@ class Delete(Command):
         if not result:
             raise RuntimeError("Failed to delete the task.")
 
-        print(boxed(f"Deleted {self.title}.", title="Success", width=100, color="green"))
+        print(
+            boxed(f"Deleted {self.title}.", title="Success", width=100, color="green")
+        )
 
 
 class List(Command):
     """Lists the current tasks within the task manager"""
 
-    db_name: str = arg(help="The name of the tasks database to use.", default="tasks.db")
+    db_name: str = arg(
+        help="The name of the tasks database to use.", default="tasks.db"
+    )
 
-    status: Positional[str | None] = arg(help="The task status to filter by.", default=None)
+    status: Positional[str | None] = arg(
+        help="The task status to filter by.", default=None
+    )
 
     @override
     async def run(self) -> None:
@@ -109,8 +144,20 @@ class List(Command):
             raise RuntimeError("No tasks found.")
 
         title_col = boxed([task.title for task in tasks], title="Title", width=25)
-        desc_col = boxed([task.description[:10] for task in tasks], title="Description", width=25)
-        date_col = boxed([datetime.strptime(task.due_date, "%Y-%m-%d").strftime("%d-%m-%Y") for task in tasks], title="Due Date", width=25)
+
+        desc_col = boxed(
+            [task.description[:10] for task in tasks], title="Description", width=25
+        )
+
+        date_col = boxed(
+            [
+                datetime.strptime(task.due_date, "%Y-%m-%d").strftime("%d-%m-%Y")
+                for task in tasks
+            ],
+            title="Due Date",
+            width=25,
+        )
+
         status_col = boxed([task.status for task in tasks], title="Status", width=25)
 
         print(separator(title="Tasks", width=100, color="cyan"))
@@ -120,18 +167,20 @@ class List(Command):
 class Cli(Command):
     subcommand: Add | Delete | List | None
 
-    db_name: str = arg(help="The name of the tasks database to use.", default="tasks.db")
+    db_name: str = arg(
+        help="The name of the tasks database to use.", default="tasks.db"
+    )
 
     @override
     async def run(self) -> None:
         options: dict[str, type[Command]] = {"1": Add, "2": Delete, "3": List}
         options_prompt: str = """
             What would you like to do?
-        
+
             (1) Add a task.
             (2) Delete a task.
             (3) List current tasks.
-        
+
             Run --help to see the list of commands.
 
             CTRL+C to quit.
@@ -142,7 +191,12 @@ class Cli(Command):
             while True:
                 try:
                     _clear()
-                    option = prompt(boxed(options_prompt, width=100, align="center", color="cyan") + "\nOption")
+
+                    option = prompt(
+                        boxed(options_prompt, width=100, align="center", color="cyan")
+                        + "\nOption"  # noqa: W503
+                    )
+
                     _clear()
 
                     command = options.get(option)
