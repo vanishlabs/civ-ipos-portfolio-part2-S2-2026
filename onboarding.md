@@ -108,7 +108,7 @@ Follow **GitHub Flow**:
 
 ## **8. Development Environment Setup**
 
-- **Python 3.9+** is required.
+- **Python 3.11+** is required.
 - Install dependencies:
   ```bash
   pip install -r requirements.txt
